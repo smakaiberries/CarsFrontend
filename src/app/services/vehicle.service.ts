@@ -4,6 +4,7 @@ import { HttpClient } from '@angular/common/http';
 @Injectable({
   providedIn: 'root'
 })
+
 export class VehicleService {
   private http: HttpClient;
   constructor(http: HttpClient) {
@@ -11,10 +12,14 @@ export class VehicleService {
   }
 
   getMakes() {
-    return this.http.get('https://localhost:44368/api/makes');
+    return this.http.get<any[]>('https://localhost:44368/api/makes');
   }
 
   getFeatures() {
-    return this.http.get('https://localhost:44368/api/vehicles/features');
+    return this.http.get<any[]>('https://localhost:44368/api/vehicles/features');
+  }
+
+  create(vehicle){
+    return this.http.post('https://localhost:44368/api/vehicles', vehicle);
   }
 }
