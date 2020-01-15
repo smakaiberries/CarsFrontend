@@ -1,6 +1,10 @@
+import * as _ from 'underscore';
 import {Component, OnInit} from '@angular/core';
 import {VehicleService} from '../services/vehicle.service';
 import {ActivatedRoute, Router} from '@angular/router';
+import {Observable} from 'rxjs';
+import 'rxjs/add/observable/forkJoin';
+import {SaveVehicle, Vehicle} from '../models/vehicle';
 
 @Component({
   selector: 'app-vehicle-form',
@@ -11,9 +15,17 @@ export class VehicleFormComponent implements OnInit {
   makes: any[];
   models: any[];
   features: any[];
-  vehicle: any = {
+  vehicle: SaveVehicle = {
+    id: 0,
+    makeId: 0,
+    modelId: 0,
+    isRegistered: false,
     features: [],
-    contact: {}
+    contact: {
+      name: '',
+      email: '',
+      phone: ''
+    }
   };
 
   constructor(private route: ActivatedRoute, private router: Router, private vehicleService: VehicleService) {
@@ -23,18 +35,37 @@ export class VehicleFormComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.vehicleService.getVehicle(this.vehicle.id).subscribe(v => this.vehicle = v);
 
-    this.vehicleService.getMakes().subscribe(makes => this.makes = makes);
+    Observable.forkJoin([
+      this.vehicleService.getMakes(),
+      this.vehicleService.getFeatures(),
+      this.vehicleService.getVehicle(this.vehicle.id)
+    ]).subscribe(data => {
+      this.makes = data[0];
+      this.features = data[1];
+      this.setVehicle(data[2] as Vehicle);
+      this.populateModels();
+    });
+  }
 
-    this.vehicleService.getFeatures().subscribe(features => this.features = features);
+  private setVehicle(v: Vehicle) {
+    this.vehicle.id = v.id;
+    this.vehicle.makeId = v.make.id;
+    this.vehicle.modelId = v.model.id;
+    this.vehicle.isRegistered = v.isRegistered;
+    this.vehicle.contact = v.contact;
+    this.vehicle.features = _.pluck(v.features, 'id');
   }
 
 
   onMakeChange() {
+    this.populateModels();
+    delete this.vehicle.modelId;
+  }
+
+  private populateModels() {
     var selectedMake = this.makes.find(m => m.id == this.vehicle.makeId);
     this.models = selectedMake ? selectedMake.models : [];
-    delete this.vehicle.modelId;
   }
 
   onFeatureToggle(featureId, $event) {
@@ -47,8 +78,18 @@ export class VehicleFormComponent implements OnInit {
   }
 
   submit() {
+    if (this.vehicle.id) {
+      this.vehicleService.update(this.vehicle).subscribe(() => console.log('update successful'));
+    }
+
     this.vehicleService.create(this.vehicle).subscribe(
       x => console.log(x));
+  }
+
+  delete(){
+    if (confirm("Are you sure?")){
+      this.vehicleService.delete(this.vehicle.id);
+    }
   }
 
 }

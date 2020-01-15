@@ -8,12 +8,15 @@ import { VehicleFormComponent } from './vehicle-form/vehicle-form.component';
 import { NavbarComponent } from './navbar/navbar.component';
 import { HttpClientModule } from '@angular/common/http';
 import { VehicleService } from './services/vehicle.service';
+import { VehicleListComponent } from './vehicle-list/vehicle-list.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     VehicleFormComponent,
     NavbarComponent,
+    VehicleListComponent,
+    VehicleListComponent
   ],
     imports: [
         BrowserModule,
